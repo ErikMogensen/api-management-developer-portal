@@ -1,3 +1,4 @@
+import { TagInput } from "./components/tag-input/tag-input";
 import "./polyfills";
 import "./bindingHandlers/scrollintoview";
 import "./bindingHandlers/copyToClipboard";
@@ -64,6 +65,8 @@ import { StaticUserService } from "./services";
 import { SignOutRouteGuard } from "./routing/signOutRouteGuard";
 import { ProvisionService } from "./services/provisioningService";
 import { OAuthService } from "./services/oauthService";
+import { BalloonBindingHandler } from "@paperbits/core/ko/bindingHandlers";
+
 
 
 export class ApimRuntimeModule implements IInjectorModule {
@@ -73,6 +76,7 @@ export class ApimRuntimeModule implements IInjectorModule {
         injector.bindSingleton("logger", ConsoleLogger);
         injector.bindCollection("autostart");
         injector.bindToCollection("autostart", UnhandledErrorHandler);
+        injector.bindInstanceToCollection("balloon", new BalloonBindingHandler(null));
         injector.bindCollection("routeGuards");
         injector.bindToCollection("routeGuards", SignOutRouteGuard);
         injector.bindToCollection("autostart", VisibilityGuard);
@@ -124,6 +128,8 @@ export class ApimRuntimeModule implements IInjectorModule {
         injector.bindSingleton("routeHelper", RouteHelper);
         injector.bindSingleton("userService", StaticUserService);
         injector.bindSingleton("provisioningService", ProvisionService);
+
         injector.bindSingleton("oauthService", OAuthService);
+        injector.bind("tagInput", TagInput);
     }
 }
