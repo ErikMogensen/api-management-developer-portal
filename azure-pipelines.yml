@@ -28,5 +28,5 @@ steps:
 - task: Npm@1
   inputs:
       command: 'install'
-      workingDir: 'scripts.V2'
+      workingDir: 'scripts.v2'
       verbose: false
