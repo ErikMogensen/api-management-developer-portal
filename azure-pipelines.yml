@@ -15,18 +15,14 @@ steps:
     versionSpec: '10.x'
   displayName: 'Install Node.js'
 
-# - script: |
-#     npm install
-#     npm run build
-#   displayName: 'npm install and build'
-#   condition: 
-#   continueOnError:
-#   enabled:
-#   env:
+- script: |
+    npm install
+    npm run build
+  displayName: 'npm install and build'
   
 
-- task: Npm@1
-  inputs:
-      command: 'install'
-      workingDir: 'scripts.v2'
-      verbose: false
+# - task: Npm@1
+#   inputs:
+#       command: 'install'
+#       workingDir: 'scripts.v2'
+#       verbose: false
