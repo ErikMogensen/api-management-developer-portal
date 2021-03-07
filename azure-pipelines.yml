@@ -4,7 +4,7 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
-- master
+- add-publishing
 
 pool:
   vmImage: 'windows-latest'
@@ -17,12 +17,10 @@ steps:
 
 - script: |
     npm install
-    npm run build
-  displayName: 'npm install and build'
-  
+  displayName: 'npm install'
 
-# - task: Npm@1
-#   inputs:
-#       command: 'install'
-#       workingDir: 'scripts.v2'
-#       verbose: false
+- task: Npm@1
+      inputs:
+       command: 'install'
+       workingDir: 'scripts.v2'
+       verbose: false
