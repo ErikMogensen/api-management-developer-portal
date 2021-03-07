@@ -20,7 +20,6 @@ steps:
   displayName: 'npm install'
 
 - task: Npm@1
-      inputs:
-       command: 'install'
-       workingDir: 'scripts.v2'
-       verbose: false
+  inputs:
+    command: 'install'
+    verbose: false
