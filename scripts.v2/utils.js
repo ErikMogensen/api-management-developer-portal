@@ -1,4 +1,6 @@
+const crypto = require('crypto');
 const fs = require("fs");
+const moment = require('moment');
 const path = require("path");
 const https = require("https");
 const { BlobServiceClient } = require("@azure/storage-blob");
@@ -49,6 +51,60 @@ async function getStorageSasTokenOrThrow(managementApiEndpoint, managementApiAcc
 async function getStorageSasToken(managementApiEndpoint, managementApiAccessToken) {
     const response = await request("POST", `https://${managementApiEndpoint}/subscriptions/00000/resourceGroups/00000/providers/Microsoft.ApiManagement/service/00000/portalSettings/mediaContent/listSecrets?api-version=2019-12-01`, managementApiAccessToken);
     return response.containerSasUrl;
+}
+
+/**
+ * Attempts to get a SAS token in two ways:
+ * 1) if the token is explicitly set by the user, use that token.
+ * 2) if the id and key are specified, manually generate a SAS token.
+ * @param {string} token an optionally specified token
+ * @param {string} id the Management API identifier
+ * @param {string} key the Management API key
+ */
+ async function getTokenOrThrow(token, id, key) {
+    if (token) {
+        return token;
+    }
+    if (id && key) {
+        return await generateSASToken(id, key);
+    }
+    throw Error('You need to specify either: token or id AND key');
+}
+
+/**
+ * Generates a SAS token from the specified Management API id and key.  Optionally
+ * specify the expiry time, in seconds.
+ * 
+ * See https://docs.microsoft.com/en-us/rest/api/apimanagement/apimanagementrest/azure-api-management-rest-api-authentication#ManuallyCreateToken
+ * @param {string} id The Management API identifier.
+ * @param {string} key The Management API key (primary or secondary)
+ * @param {number} expiresIn The number of seconds in which the token should expire.
+ */
+async function generateSASToken(id, key, expiresIn = 3600) {
+    const now = moment.utc(moment());
+    const expiry = now.clone().add(expiresIn, 'seconds');
+    const expiryString = expiry.format(`YYYY-MM-DD[T]HH:mm:ss.SSSSSSS[Z]`);
+
+    const dataToSign = `${id}\n${expiryString}`;
+    const signedData = crypto.createHmac('sha512', key).update(dataToSign).digest('base64');
+    return `SharedAccessSignature uid=${id}&ex=${expiryString}&sn=${signedData}`;
+}
+
+/**
+ * Publishes the content of the specified APIM instance using a SAS token.
+ * @param {string} endpoint the publishing endpoint of the destination developer portal instance
+ * @param {string} token the SAS token
+ */
+async function publish(endpoint, token) {
+    try {
+        const url = `https://${endpoint}/publish`; // ?api-version=2019-12-01
+
+        // returns with literal OK (missing quotes), which is invalid json.
+        await request("POST", url, token);
+    }
+    catch (error) {
+        throw new Error(`Unable to schedule website publishing. ${error.message}`);
+    }
 }
 
 /**
@@ -189,5 +245,7 @@ module.exports = {
     downloadBlobs,
     uploadBlobs,
     deleteBlobs,
-    getStorageSasTokenOrThrow
+    getStorageSasTokenOrThrow,
+    getTokenOrThrow,
+    publish
 };
